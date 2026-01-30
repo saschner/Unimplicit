@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Unimplicit — Making the implicit explicit</title>
+  <meta name="description" content="Unimplicit makes the implicit explicit—clearer instructions, fewer misunderstandings, better outcomes." />
+  <style>
+    :root{
+      --bg1:#0b1020;
+      --bg2:#101a3a;
+      --card:#0f1730cc;
+      --text:#eaf0ff;
+      --muted:#b7c4ff;
+      --accent:#86b7ff;
+      --accent2:#d7a6ff;
+      --border:#2a3a6a;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --radius: 22px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      min-height:100vh;
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(134,183,255,.25), transparent 60%),
+        radial-gradient(1000px 800px at 80% 20%, rgba(215,166,255,.22), transparent 55%),
+        radial-gradient(900px 700px at 60% 90%, rgba(120,255,214,.12), transparent 55%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      overflow-x:hidden;
+    }
+
+    /* subtle animated “constellation” dots */
+    .stars{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:.65;
+      filter: blur(.1px);
+      background-image:
+        radial-gradient(2px 2px at 10% 20%, rgba(255,255,255,.35) 40%, transparent 41%),
+        radial-gradient(2px 2px at 30% 70%, rgba(255,255,255,.25) 40%, transparent 41%),
+        radial-gradient(2px 2px at 80% 40%, rgba(255,255,255,.3) 40%, transparent 41%),
+        radial-gradient(2px 2px at 55% 25%, rgba(255,255,255,.22) 40%, transparent 41%),
+        radial-gradient(2px 2px at 70% 85%, rgba(255,255,255,.2) 40%, transparent 41%),
+        radial-gradient(1.5px 1.5px at 15% 85%, rgba(255,255,255,.2) 40%, transparent 41%),
+        radial-gradient(1.5px 1.5px at 90% 10%, rgba(255,255,255,.18) 40%, transparent 41%);
+      animation: drift 14s ease-in-out infinite alternate;
+    }
+    @keyframes drift{
+      from{transform:translateY(0px)}
+      to{transform:translateY(14px)}
+    }
+
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:44px 18px 70px;
+      position:relative;
+      z-index:1;
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:28px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .logo{
+      width:46px;
+      height:46px;
+      border-radius:16px;
+      background:
+        radial-gradient(circle at 30% 35%, rgba(255,255,255,.25), transparent 55%),
+        linear-gradient(135deg, rgba(134,183,255,.9), rgba(215,166,255,.9));
+      box-shadow: 0 12px 30px rgba(134,183,255,.18);
+      position:relative;
+      overflow:hidden;
+    }
+    .logo:after{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
+      transform: rotate(25deg);
+      animation: shine 5.5s ease-in-out infinite;
+    }
+    @keyframes shine{
+      0%{transform:translateX(-40%) rotate(25deg)}
+      40%{transform:translateX(60%) rotate(25deg)}
+      100%{transform:translateX(60%) rotate(25deg)}
+    }
+
+    .brand h1{
+      margin:0;
+      font-size:22px;
+      letter-spacing:.2px;
+      font-weight:800;
+    }
+    .brand small{
+      display:block;
+      margin-top:2px;
+      color:var(--muted);
+      font-family:var(--mono);
+      font-size:12px;
+      letter-spacing:.6px;
+    }
+
+    .pill{
+      font-size:12px;
+      color:var(--muted);
+      border:1px solid rgba(134,183,255,.35);
+      background: rgba(15,23,48,.55);
+      padding:10px 12px;
+      border-radius:999px;
+      box-shadow: 0 8px 26px rgba(0,0,0,.25);
+      white-space:nowrap;
+    }
+
+    .hero{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap:22px;
+      align-items:stretch;
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid rgba(42,58,106,.65);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .left{
+      padding:26px 24px 24px;
+    }
+
+    .kicker{
+      display:inline-flex;
+      gap:10px;
+      align-items:center;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(215,166,255,.35);
+      background: rgba(15,23,48,.55);
+      color:var(--muted);
+      font-size:12px;
+      letter-spacing:.3px;
+      margin-bottom:14px;
+    }
+
+    .title{
+      margin:0 0 10px;
+      font-size:40px;
+      line-height:1.06;
+      letter-spacing:-.8px;
+      font-weight:900;
+    }
+
+    .subtitle{
+      margin:0 0 18px;
+      color:rgba(234,240,255,.86);
+      font-size:16px;
+      line-height:1.55;
+      max-width:46ch;
+    }
+
+    .callouts{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin:18px 0 0;
+    }
+
+    .tag{
+      border:1px solid rgba(134,183,255,.22);
+      background: rgba(11,16,32,.35);
+      color:rgba(234,240,255,.85);
+      padding:10px 12px;
+      border-radius:14px;
+      font-size:13px;
+    }
+    .tag b{color:var(--text)}
+
+    .ctaRow{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-top:18px;
+    }
+
+    .btn{
+      appearance:none;
+      border:0;
+      padding:12px 14px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:700;
+      letter-spacing:.2px;
+      transition: transform .12s ease, opacity .12s ease;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn:active{transform:translateY(0px); opacity:.92}
+
+    .btnPrimary{
+      color:#0b1020;
+      background: linear-gradient(135deg, rgba(134,183,255,1), rgba(215,166,255,1));
+      box-shadow: 0 14px 35px rgba(134,183,255,.16);
+    }
+    .btnGhost{
+      color:rgba(234,240,255,.9);
+      background: rgba(11,16,32,.25);
+      border:1px solid rgba(134,183,255,.25);
+    }
+
+    .note{
+      margin-top:14px;
+      font-size:12px;
+      color:rgba(183,196,255,.85);
+      font-family: var(--mono);
+    }
+
+    /* Right “scene” */
+    .right{
+      padding:18px;
+      position:relative;
+      overflow:hidden;
+      min-height:340px;
+    }
+
+    .scene{
+      position:relative;
+      height:100%;
+      border-radius: calc(var(--radius) - 6px);
+      border: 1px solid rgba(42,58,106,.55);
+      background:
+        radial-gradient(600px 360px at 25% 20%, rgba(134,183,255,.18), transparent 60%),
+        radial-gradient(500px 360px at 80% 20%, rgba(215,166,255,.16), transparent 60%),
+        linear-gradient(180deg, rgba(11,16,32,.75), rgba(16,26,58,.65));
+      padding:18px;
+    }
+
+    /* Stick-figure-ish person */
+    .person{
+      position:absolute;
+      left:50%;
+      bottom:32px;
+      transform: translateX(-50%);
+      width:220px;
+      height:240px;
+      opacity:.92;
+    }
+    .line{
+      position:absolute;
+      background: rgba(234,240,255,.86);
+      border-radius:999px;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.08);
+    }
+    .head{
+      width:58px; height:58px;
+      border: 3px solid rgba(234,240,255,.9);
+      border-radius: 999px;
+      position:absolute;
+      left: 50%;
+      top: 18px;
+      transform: translateX(-50%);
+      background: transparent;
+    }
+    .eye{
+      width:6px; height:6px;
+      border-radius:999px;
+      position:absolute;
+      top: 40px;
+      background: rgba(234,240,255,.9);
+    }
+    .eye.left{left: 96px;}
+    .eye.right{right: 96px;}
+    .mouth{
+      position:absolute;
+      left:50%;
+      top: 54px;
+      width:18px; height:10px;
+      transform: translateX(-50%);
+      border-bottom: 3px solid rgba(234,240,255,.85);
+      border-radius: 0 0 20px 20px;
+      opacity:.8;
+    }
+    .body{
+      width:4px; height:92px;
+      left:50%;
+      top: 78px;
+      transform: translateX(-50%);
+    }
+    .armL{width:4px; height:70px; left:92px; top: 98px; transform: rotate(28deg); transform-origin:top;}
+    .armR{width:4px; height:70px; right:92px; top: 98px; transform: rotate(-28deg); transform-origin:top;}
+    .legL{width:4px; height:84px; left:106px; top: 158px; transform: rotate(8deg); transform-origin:top;}
+    .legR{width:4px; height:84px; right:106px; top: 158px; transform: rotate(-8deg); transform-origin:top;}
+
+    /* Floating speech bubbles */
+    .bubble{
+      position:absolute;
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid rgba(134,183,255,.28);
+      background: rgba(15,23,48,.75);
+      color: rgba(234,240,255,.92);
+      box-shadow: 0 16px 50px rgba(0,0,0,.35);
+      font-weight:700;
+      letter-spacing:.1px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      animation: float 5.5s ease-in-out infinite;
+      max-width: 220px;
+    }
+    .bubble:after{
+      content:"";
+      position:absolute;
+      width:10px; height:10px;
+      background: rgba(15,23,48,.75);
+      border-left:1px solid rgba(134,183,255,.28);
+      border-bottom:1px solid rgba(134,183,255,.28);
+      transform: rotate(45deg);
+      bottom:-6px;
+      left: 22px;
+    }
+    .bubble.b1{left:18px; top:24px; animation-delay:0s;}
+    .bubble.b2{right:16px; top:62px; animation-delay:.6s;}
+    .bubble.b3{left:42px; top:128px; animation-delay:1.2s;}
+    @keyframes float{
+      0%,100%{transform:translateY(0px)}
+      50%{transform:translateY(-10px)}
+    }
+
+    .bubble span{
+      display:block;
+      font-weight:600;
+      color:rgba(183,196,255,.92);
+      font-size:12px;
+      margin-top:6px;
+      font-family:var(--mono);
+      letter-spacing:.25px;
+    }
+
+    /* Footer */
+    footer{
+      margin-top:18px;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      color:rgba(183,196,255,.85);
+      font-size:12px;
+      font-family: var(--mono);
+      opacity:.95;
+      flex-wrap:wrap;
+    }
+
+    @media (max-width: 920px){
+      .hero{grid-template-columns:1fr; }
+      .title{font-size:36px}
+      .right{min-height:360px}
+    }
+  </style>
+</head>
+<body>
+  <div class="stars" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Unimplicit</h1>
+          <small>making the implicit explicit</small>
+        </div>
+      </div>
+      <div class="pill">Temporary landing page · coming soon</div>
+    </header>
+
+    <section class="hero">
+      <div class="card left">
+        <div class="kicker">🫧 Clarity, not guesswork</div>
+
+        <h2 class="title">Clear instructions.<br/>Less ambiguity.</h2>
+        <p class="subtitle">
+          Unimplicit turns vague, implied, or “read-between-the-lines” communication into direct, actionable language—so people can do the work without decoding the room.
+        </p>
+
+        <div class="callouts">
+          <div class="tag"><b>Translate</b> unclear asks</div>
+          <div class="tag"><b>Surface</b> hidden expectations</div>
+          <div class="tag"><b>Confirm</b> urgency & due dates</div>
+          <div class="tag"><b>Reduce</b> tone anxiety</div>
+        </div>
+
+        <div class="ctaRow">
+          <button class="btn btnPrimary" onclick="copyEmail()">Notify me when it launches</button>
+          <button class="btn btnGhost" onclick="showDemo()">Show me a mini demo</button>
+        </div>
+
+        <div class="note" id="note">
+          (For now, this is a placeholder while we connect the domain and ship v1.)
+        </div>
+      </div>
+
+      <div class="card right">
+        <div class="scene">
+          <div class="bubble b1">“The what…?”<span>unclear request</span></div>
+          <div class="bubble b2">“When is this due?”<span>hidden urgency</span></div>
+          <div class="bubble b3">“Who… me?”<span>implicit ownership</span></div>
+
+          <div class="person" aria-hidden="true">
+            <div class="head"></div>
+            <div class="eye left"></div>
+            <div class="eye right"></div>
+            <div class="mouth"></div>
+
+            <div class="line body"></div>
+            <div class="line armL"></div>
+            <div class="line armR"></div>
+            <div class="line legL"></div>
+            <div class="line legR"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div>© <span id="y"></span> Unimplicit</div>
+      <div>“Making the implicit explicit.”</div>
+    </footer>
+  </div>
+
+  <script>
+    // Tiny, zero-dependency placeholder behavior
+    document.getElementById("y").textContent = new Date().getFullYear();
+
+    function copyEmail(){
+      // Put your real email here later if you want — for now, it just copies a placeholder.
+      const email = "hello@unimplicit.com";
+      navigator.clipboard?.writeText(email).then(() => {
+        document.getElementById("note").textContent =
+          "Copied: " + email + " (swap this for a real signup form when you're ready).";
+      }).catch(() => {
+        document.getElementById("note").textContent =
+          "If clipboard is blocked, type: hello@unimplicit.com (replace later).";
+      });
+    }
+
+    function showDemo(){
+      // Simple, cute “translation” example
+      const examples = [
+        {
+          vague: "Can you circle back on this soon?",
+          clear: "Please reply with a status update by 3:00 PM today."
+        },
+        {
+          vague: "Let’s make it more polished.",
+          clear: "Please fix formatting, correct typos, and shorten to 150 words."
+        },
+        {
+          vague: "We should probably prioritize that.",
+          clear: "Make this the top task today; pause lower-priority work until it’s done."
+        }
+      ];
+
+      const pick = examples[Math.floor(Math.random()*examples.length)];
+      document.getElementById("note").textContent =
+        "Mini demo → Vague: “" + pick.vague + "”  |  Unimplicit: “" + pick.clear + "”";
+    }
+  </script>
+</body>
+</html>
